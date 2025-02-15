@@ -1,0 +1,9 @@
+version: "3.8"
+
+services:
+  nginx:
+    build: requirements/nginx/.
+    container_name: nginx
+    hostname: localhost
+    ports:
+      - "443:443"

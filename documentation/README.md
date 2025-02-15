@@ -25,3 +25,21 @@ NOTE: Containers have to RESTART on crash
 # DOMAIN
 > mman.42.fr
 > points to local IP address
+
+
+
+
+
+
+
+
+
+
+# ============================= #
+
+sudo apt-get update
+sudo apt-get install -y nginx
+nginx -g 'daemon off;'
+
+
+sudo systemctl start docker

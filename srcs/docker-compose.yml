@@ -1,9 +1,108 @@
-version: "3.8"
+version: "3.9"
 
 services:
+  mariadb:
+    container_name: mariadb
+    build: ./requirements/mariadb
+    restart: always
+    env_file: .env
+    volumes:
+      - db:/var/lib/mysql
+    networks:
+      - project
+
+  wordpress:
+    container_name: wordpress
+    build: ./requirements/wordpress
+    env_file: .env
+    volumes:
+      - wp:/var/www/html/wordpress
+    networks:
+      - project
+    depends_on:
+      - mariadb
+
   nginx:
-    build: requirements/nginx/.
     container_name: nginx
+    build: ./requirements/nginx
     hostname: localhost
+    volumes:
+      - wp:/var/www/html/wordpress
+    networks:
+      - project
+    depends_on:
+      - wordpress
     ports:
-      - "443:443"
+      # - "8080:80" # http
+      - "443:443" # https
+
+  redis:
+    build: requirements/bonus/redis
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - project
+    restart: always
+
+  ftp-server:
+    build: requirements/bonus/ftp-server
+    container_name: ftp-server
+    ports:
+      - "21:21"
+      - "21100-21110:21100-21110"
+    volumes:
+      - wp:/var/www/html/wordpress
+    networks:
+      - project
+    restart: always
+    environment:
+      FTP_USR: ${FTP_USR}
+      FTP_PWD: ${FTP_PWD}
+
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    #  UI over port 9443 and expose a TCP tunnel server over port 8000
+    ports:
+      - "8000:8000"
+      - "9443:9443"
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    security_opt:
+      - no-new-privileges:true
+    restart: always
+
+  # adminer - bring up only as needed - bypasses nginx
+  adminer:
+    # default port 8080
+    image: adminer:4
+    container_name: adminer
+    restart: unless-stopped
+    networks:
+      - project
+    depends_on:
+      - mariadb
+    ports:
+      - "9000:8080"
+
+volumes:
+  db:
+    name: db
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/${USER}/data/db
+  wp:
+    name: wp
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/${USER}/data/wp
+
+networks:
+  project:
+    driver: bridge

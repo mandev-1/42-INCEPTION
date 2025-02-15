@@ -36,29 +36,29 @@ services:
       # - "8080:80" # http
       - "443:443" # https
 
-  redis:
-    build: requirements/bonus/redis
-    container_name: redis
-    ports:
-      - "6379:6379"
-    networks:
-      - project
-    restart: always
+  # redis:
+  #   build: requirements/bonus/redis
+  #   container_name: redis
+  #   ports:
+  #     - "6379:6379"
+  #   networks:
+  #     - project
+  #   restart: always
 
-  ftp-server:
-    build: requirements/bonus/ftp-server
-    container_name: ftp-server
-    ports:
-      - "21:21"
-      - "21100-21110:21100-21110"
-    volumes:
-      - wp:/var/www/html/wordpress
-    networks:
-      - project
-    restart: always
-    environment:
-      FTP_USR: ${FTP_USR}
-      FTP_PWD: ${FTP_PWD}
+  # ftp-server:
+  #   build: requirements/bonus/ftp-server
+  #   container_name: ftp-server
+  #   ports:
+  #     - "21:21"
+  #     - "21100-21110:21100-21110"
+  #   volumes:
+  #     - wp:/var/www/html/wordpress
+  #   networks:
+  #     - project
+  #   restart: always
+  #   environment:
+  #     FTP_USR: ${FTP_USR}
+  #     FTP_PWD: ${FTP_PWD}
 
   portainer:
     image: portainer/portainer-ce:latest

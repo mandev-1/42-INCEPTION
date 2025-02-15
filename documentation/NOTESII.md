@@ -6,7 +6,7 @@ Building mariadb
 Sending build context to Docker daemon  10.75kB
 Step 1/8 : FROM debian:buster
 buster: Pulling from library/debian
-3892befd2c3f: Pull complete 
+3892befd2c3f: Pull complete
 Digest: sha256:58ce6f1271ae1c8a2006ff7d3e54e9874d839f573d8009c20154ad0f2fb0a225
 Status: Downloaded newer image for debian:buster
  ---> 69530eaa9e7e
@@ -398,4 +398,40 @@ E: Couldn't find any package by glob 'php7.3'
 The command '/bin/sh -c apt install -y php7.3 php-mysqli php-fpm curl sendmail' returned a non-zero code: 100
 ERROR: Service 'wordpress' failed to build : Build failed
 make: *** [makefile:6: up] Error 1
-mman@mman:~/INCEPTION$ 
+mman@mman:~/INCEPTION$
+
+
+--
+
+
+The error occurs because you're trying to install PHP 7.3 on Debian Bookworm (Debian 12), which doesn't have this version in its repositories. Debian Bookworm comes with PHP 8.2 by default.
+
+You have two options:
+
+1. Use Debian Buster (Debian 10) which has PHP 7.3:
+```dockerfile
+FROM debian:buster
+```
+
+2. Or modify your Dockerfile to use PHP 8.2 which is available in Debian Bookworm:
+```dockerfile
+FROM debian:latest
+RUN apt update
+RUN apt install -y php php-mysqli php-fpm curl sendmail
+```
+
+If you specifically need PHP 7.3 for your project, I recommend using Debian Buster:
+
+```dockerfile
+FROM debian:buster
+RUN apt update
+RUN apt install -y php7.3 php-mysqli php-fpm curl sendmail
+```
+
+The issue stems from using `debian:latest` (which is Debian 12 Bookworm) while trying to install PHP 7.3 which is not available in that version's repositories.
+
+Choose the approach that best fits your project requirements:
+1. If PHP 7.3 is required, use Debian Buster
+2. If you can use a newer PHP version, use the current Debian with PHP 8.2
+
+Make this change in your Dockerfile and try building again.

@@ -6,42 +6,39 @@ chown -R www-data /var/www/html/wordpress;
 mkdir -p /run/php/;
 touch /run/php/php7.3-fpm.pid;
 
-# php -S 0.0.0.0:9000 -t /var/www/html/wordpress
-
+# Check if WordPress is already installed
 if [ ! -f /var/www/html/wordpress/wp-config.php ]; then
-echo "Wordpress: setting up..."
-curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar;
-chmod +x wp-cli.phar;
+    echo "Setting up WordPress..."
+    # Download WordPress core files
+    wp core download --path=/var/www/html/wordpress --allow-root
 
-mv wp-cli.phar /usr/local/bin/wp;
-cd /var/www/html/wordpress;
+    # Create wp-config.php
+    wp config create --path=/var/www/html/wordpress --dbname=${WORDPRESS_DB_NAME} --dbuser=${WORDPRESS_DB_USER} --dbpass=${WORDPRESS_DB_PASSWORD} --dbhost=${WORDPRESS_DB_HOST} --allow-root
 
+    # Install WordPress
+    wp core install --path=/var/www/html/wordpress --url="http://localhost" --title="WordPress Site" --admin_user=${WORDPRESS_ADMIN_USER} --admin_password=${WORDPRESS_ADMIN_PASSWORD} --admin_email=${WORDPRESS_ADMIN_EMAIL} --allow-root
 
-# static website
-	mkdir -p /var/www/html/wordpress/mysite;
-    mv /var/www/index.html /var/www/html/wordpress/mysite/index.html;
+    # static website
+    cp /var/www/index.html /var/www/html/wordpress/index.html
 
-wp core download --allow-root;
-mv /var/www/wp-config.php /var/www/html/wordpress;
-echo "Wordpress: creating users..."
-wp core install --allow-root --url=${DOMAIN_NAME} --title=${WORDPRESS_NAME} --admin_user=${WORDPRESS_ROOT_LOGIN} --admin_password=${MYSQL_ROOT_PASSWORD} --admin_email=${WORDPRESS_ROOT_EMAIL};
-wp user create ${MYSQL_USER} ${WORDPRESS_USER_EMAIL} --user_pass=${MYSQL_PASSWORD} --role=author --allow-root;
-wp theme install inspiro --activate --allow-root
+    echo "Wordpress: creating users..."
+    wp user create ${MYSQL_USER} ${WORDPRESS_USER_EMAIL} --user_pass=${MYSQL_PASSWORD} --role=author --allow-root;
+    wp theme install inspiro --activate --allow-root
 
-# enable redis cache
-    sed -i "40i define( 'WP_REDIS_HOST', '$REDIS_HOST' );"      wp-config.php
-    sed -i "41i define( 'WP_REDIS_PORT', 6379 );"               wp-config.php
-    #sed -i "42i define( 'WP_REDIS_PASSWORD', '$REDIS_PWD' );"   wp-config.php
-    sed -i "42i define( 'WP_REDIS_TIMEOUT', 1 );"               wp-config.php
-    sed -i "43i define( 'WP_REDIS_READ_TIMEOUT', 1 );"          wp-config.php
-    sed -i "44i define( 'WP_REDIS_DATABASE', 0 );\n"            wp-config.php
+    # enable redis cache
+    sed -i "40i define( 'WP_REDIS_HOST', '$REDIS_HOST' );"      /var/www/html/wordpress/wp-config.php
+    sed -i "41i define( 'WP_REDIS_PORT', 6379 );"               /var/www/html/wordpress/wp-config.php
+    #sed -i "42i define( 'WP_REDIS_PASSWORD', '$REDIS_PWD' );"   /var/www/html/wordpress/wp-config.php
+    sed -i "42i define( 'WP_REDIS_TIMEOUT', 1 );"               /var/www/html/wordpress/wp-config.php
+    sed -i "43i define( 'WP_REDIS_READ_TIMEOUT', 1 );"          /var/www/html/wordpress/wp-config.php
+    sed -i "44i define( 'WP_REDIS_DATABASE', 0 );\n"            /var/www/html/wordpress/wp-config.php
 
     wp plugin install redis-cache --activate --allow-root
     wp plugin update --all --allow-root
 
-echo "Wordpress: set up!"
+    echo "Wordpress: set up!"
 else
-echo "Wordpress: is already set up!"
+    echo "WordPress is already set up!"
 fi
 
 wp redis enable --allow-root

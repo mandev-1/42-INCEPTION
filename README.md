@@ -26,8 +26,11 @@ NOTE: Containers have to RESTART on crash
 > mman.42.fr
 > points to local IP address
 
-
-
+# OS
+> Debian 10: Buster
+> Debian 11: Bullseye
+> Debian 12: Bookworm
+> (TBA) Debian 13: Trixie
 
 
 
